@@ -10,58 +10,65 @@ const wsServer = new ws.Server({ server });
 
 let clientCount = 0;
 
+let history = [];
+
 wsServer.on('connection', client => {
 
     clientCount++;
     client.id = clientCount;
 
-    console.log("Client connected [" + client.id + "]");
-    client.send(`Welcome! You are client ${client.id}.`);
+    for (let item of history) {
+      client.send(`<span style="color:silver">${item}</span>`);
+    }
+    if (history.length > 0) client.send('<hr>');
+    client.send(`<strong>Welcome!</strong> You are client ${client.id}.`);
 
-    client.isAlive = true;
-
-    client.on('pong', () => {
-        console.log("Pong [" + client.id + "]");
-        client.isAlive = true;
+    let greeting = `<strong>Client ${client.id} joined!</strong>`;
+    wsServer.clients.forEach(c => {
+        if (c != client) c.send(greeting);
     });
+    console.log(greeting);
+    history.push(greeting);
 
     client.on('message', message => {
 
-        console.log(`Recieved [${client.id}]: ${message}`);
-
+        let broadcast = `<strong>Client ${client.id}:</strong> ${message}`;
         wsServer.clients.forEach(c => {
-            if (c != client) {
-                c.send(message);
-            }
+            if (c != client) c.send(broadcast);
         });
+        console.log(broadcast);
+        history.push(broadcast);
 
     });
 
     client.on('close', () => {
-        console.log("Client disconnected [" + client.id + "]");
+
+      let farewell = `<strong>Client ${client.id} disconnected!</strong>`;
+      wsServer.clients.forEach(c => {
+          if (c != client) c.send(farewell);
+      });
+      console.log(farewell);
+      history.push(farewell);
+
     });
 
 });
 
-setInterval(() => {
+app.use('/client',
+    (req, res, next) => {
+        console.log("Serving static content: " + req.path);
+        next();
+    },
+    express.static('client')
+);
 
-    wsServer.clients.forEach(client => {
+const httpPort = 8081;
+const wsPort = 8082;
 
-        if (!client.isAlive) {
-            console.log("Client lost [" + client.id + "]");
-            return client.terminate();
-        }
+app.listen(httpPort, function(){
+  console.log(`HTTP server started on port ${httpPort}`);
+});
 
-        client.isAlive = false;
-        console.log("Ping [" + client.id + "]");
-        client.ping(null, false, true);
-
-    });
-
-}, 10000);
-
-server.listen(8082, () => {
-
-    console.log(`WebSocket Server started on port ${server.address().port}`);
-
+server.listen(wsPort, () => {
+    console.log(`WebSocket server started on port ${wsPort}`);
 });

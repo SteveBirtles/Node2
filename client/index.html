@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <script src="/client/client.js"></script>
+
+    <style>
+        #chat {
+            overflow-y: scroll;
+            height: calc(100vh - 100px);
+            margin: 10px;
+            padding: 10px;
+            border: 1px solid silver;
+        }
+
+        #inputs {
+            margin: 10px;
+            padding: 10px;
+            border: 1px solid black;
+        }
+    </style>
+
+</head>
+
+<body onload="pageLoad()">
+    <div id="inputs">
+        <input id="message" type="text" placeholder="message" />
+        <button id="send">Send</button>
+    </div>
+    <div id="chat"></div>
+
+</body>
+
+</html>
